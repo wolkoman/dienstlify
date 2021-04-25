@@ -21,6 +21,7 @@ jobs:
       - name: Run
         run: deno run --allow-net --allow-env --allow-read app.ts
         env:
-          telegramApiToken: ${{ env.TELEGRAMAPITOKEN }}
-          chatId: ${{ env.CHATID }}
-          sessionId: ${{ env.SESSIONID }}
+          TEST: ${{ secrets.TEST }}
+          TELEGRAMAPITOKEN: ${{ secrets.TELEGRAMAPITOKEN }}
+          CHATID: ${{ secrets.CHATID }}
+          SESSIONID: ${{ secrets.SESSIONID }}
