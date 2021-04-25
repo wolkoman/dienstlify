@@ -8,7 +8,8 @@ on:
 
 jobs:
   run:
-    runs-on: "windows-latest"
+    name: "Finding free duties"
+    runs-on: "ubuntu-latest"
 
     steps:
       - name: Setup repo
@@ -19,9 +20,4 @@ jobs:
           deno-version: v1.x
 
       - name: Run
-        run: deno run --allow-net --allow-env --allow-read app.ts
-        env:
-          TEST: ${{ secrets.TEST }}
-          TELEGRAMAPITOKEN: ${{ secrets.TELEGRAMAPITOKEN }}
-          CHATID: ${{ secrets.CHATID }}
-          SESSIONID: ${{ secrets.SESSIONID }}
+        run: deno run --allow-net --allow-env --allow-read app.ts ${{ secrets.SESSIONID }} ${{ secrets.TELEGRAMAPITOKEN }} ${{ secrets.CHATID }}
