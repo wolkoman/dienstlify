@@ -3,9 +3,18 @@ import {useEffect, useState} from 'react';
 import {useRouter} from 'next/router';
 
 
+const stationIds = [9, 13, 16, 17, 18];
+const monthsInAdvance = 3;
+
+const dates = Array(monthsInAdvance)
+  .fill(0)
+  .map((_, index) => new Date(new Date().setMonth(new Date().getMonth() + index)))
+  .map(date => ({year: date.getFullYear(), month: date.getMonth() + 1}))
+const requests = dates.flatMap(date => stationIds.map(stationId => ({...date, stationId})));
+
 export default function App() {
   const router = useRouter();
-  const [loading, setLoading] = useState(true);
+  const [loaded, setLoaded] = useState(0);
   const [duties, setDuties] = useState([]);
   const [filter, setFilter] = useState({
     dienststellen: {},
@@ -19,16 +28,19 @@ export default function App() {
       router.push('/');
       return;
     }
-    fetch(`/api/duties?token=${sessionId}`).then(response => response.json())
-      .then(duties => {
-        setLoading(false);
-        setDuties(duties);
-        let dienststellen = Array.from(new Set(duties.map(duty => duty.title)));
-        setFilter(f => ({...f, dienststellen: Object.fromEntries(dienststellen.map(d => [d, true]))}));
-      });
+
+    const requestFns = requests.map(request => () => fetch(`/api/duty?token=${sessionId}&stationId=${request.stationId}&month=${request.month}&year=${request.year}`)
+      .then(response => response.json())
+      .then(newDuties => {
+        setLoaded(count => count + 1);
+        setDuties(duties => [...duties, ...newDuties]);
+        setFilter(f => ({...f, dienststellen: Object.fromEntries(Array.from(new Set(duties.map(duty => duty.title))).map(d => [d, true]))}));
+      }));
+    requestFns.reduce((p, fn) => p.then(() => new Promise((res) => setTimeout(res, 5000))).then(fn), Promise.resolve());
+
   }, []);
   return <Responsive>
-    {loading ? <>lädt</> : <>
+    {loaded < requests.length ? <>{loaded}/{requests.length}</> : <>
       <div className="mb-2">
         <div className="inline-flex rounded overflow-hidden select-none mr-2 mb-2">
           {Object.entries(filter.dienststellen).map(([dienstelle, active]) =>
@@ -86,7 +98,7 @@ export default function App() {
           )
           .filter(duty => {
               const regex = new RegExp(filter.search, 'i');
-              return !!`${duty.driver} ${duty.san1} ${duty.san2}`.match(regex);
+              return !!`d:${duty.driver} s1:${duty.san1} s2:${duty.san2}`.match(regex);
             }
           )
           .flatMap(duty => [
