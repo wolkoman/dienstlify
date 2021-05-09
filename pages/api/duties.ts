@@ -1,6 +1,6 @@
 import {NextApiRequest, NextApiResponse} from 'next';
-import * as jsdom from 'jsdom';
 import iconv from 'iconv-lite';
+import cheerio from 'cheerio';
 
 export default async (req: NextApiRequest, res: NextApiResponse) => {
 
@@ -18,20 +18,21 @@ export default async (req: NextApiRequest, res: NextApiResponse) => {
     )
       .then(response => response.arrayBuffer())
       .then(buffer => iconv.decode(new Buffer(buffer), 'iso-8859-1'))
-      .then(html => new jsdom.JSDOM(html).window.document)
+      .then(html => cheerio.load(html))
       .then(document => ({
-        title: document?.querySelector('legend')?.textContent,
-        days: Array.from(document?.querySelector('.table-responsive tbody')?.children ?? [])
-          .map(x => Array.from(x?.children))
+        title: document('legend').text(),
+        days: Array.from(document('.table-responsive tbody').children())
+          .map(x => x.childNodes)
           .map(x => ({
-            day: +(x[0].textContent.split('.')[0]),
+            day: +(document(x[0]).text().split('.')[0]),
             month, year,
-            startTime: x[2].textContent.split(' - ')[0],
-            driver: toName(x[4].textContent),
-            san1: toName(x[5].textContent),
-            san2: toName(x[6].textContent),
+            startTime: cheerio(x[2]).text().split(' - ')[0],
+            driver: toName(cheerio(x[4]).text()),
+            san1: toName(cheerio(x[5]).text()),
+            san2: toName(cheerio(x[6]).text()),
           }))
-      }));
+      }))
+  ;
 
   const dates = Array(monthsInAdvance)
     .fill(0)
@@ -42,9 +43,10 @@ export default async (req: NextApiRequest, res: NextApiResponse) => {
     dates
       .flatMap(date => dienststellenIds.map(dienststellenId => ({...date, dienststellenId})))
       .map(obj => fetchPage(obj))
-  ).then(pages => pages
-    .flatMap(page => page.days.map(day => ({...day, title: page.title.replace('RTW-C ', '')})))
-    .sort((a, b) => toDate(a).localeCompare(toDate(b)))
+  ).then(pages =>
+    pages
+      .flatMap(page => page.days.map(day => ({...day, title: page.title.replace('RTW-C ', '')})))
+      .sort((a, b) => toDate(a).localeCompare(toDate(b)))
   )
     .then(data => res.json(data))
     .catch(message => res.json(message));
