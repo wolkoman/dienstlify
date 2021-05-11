@@ -4,7 +4,7 @@ import {useRouter} from 'next/router';
 
 
 const stationIds = [9, 13, 16, 17, 18];
-const monthsInAdvance = 1;
+const monthsInAdvance = 3;
 
 const dates = Array(monthsInAdvance)
   .fill(0)
