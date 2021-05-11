@@ -36,6 +36,7 @@ export default function App() {
       .map(request => () => fetch(`/api/duty?token=${sessionId}&stationId=${request.stationId}&month=${request.month}&year=${request.year}`)
         .then(response => response.json())
         .then(newDuties => {
+          if(newDuties.length === 0) throw new Error();
           setLoaded(count => count + 1);
           setDuties(duties => ([...duties, ...newDuties] as Duty[]).sort((a,b) => a.year * 366 + a.month * 32 + a.day - b.year * 366 - b.month * 32 - b.day));
           setFilter(f => ({
@@ -43,7 +44,7 @@ export default function App() {
             dienststellen: {...f.dienststellen, ...Object.fromEntries(Array.from(new Set(newDuties.map(duty => duty.title))).map(d => [d, true]))}
           }));
         }))
-      .reduce((p, fn) => p.then(() => new Promise((res) => setTimeout(res, 5000))).then(fn), Promise.resolve());
+      .reduce((p, fn) => p.then(() => new Promise((res) => setTimeout(res, 5000))).then(fn), Promise.resolve()).catch(() => router.push("/"));
 
   }, []);
   return <Site>
