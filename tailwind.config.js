@@ -7,8 +7,8 @@ module.exports = {
         'table': '80px 60px 60px 1fr 1fr 1fr',
       },
       colors:{
-        primary: '#222',
-        secondary: '#cc0000',
+        primary: '#F1F0EA',
+        secondary: '#CB2026',
       }
     },
   },
