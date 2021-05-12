@@ -1,12 +1,14 @@
 import Head from 'next/head'
 import {useRouter} from 'next/router';
 import {Site} from '../components/Site';
+import {useState} from 'react';
 
 export default function Home() {
-  let router = useRouter();
+  const router = useRouter();
+  const [sessionId, setSessionId] = useState("");
 
-  function confirm(event: any) {
-    localStorage.setItem('PHPSESSID', (event.target as any).value);
+  function confirm() {
+    localStorage.setItem('PHPSESSID', sessionId);
     router.push('/app');
   }
 
@@ -25,12 +27,15 @@ export default function Home() {
               Geben Sie hier das Cookie PHPSESSID<br/> von der Seite <a href="https://intranet-md.n.roteskreuz.at/">intranet-md.n.roteskreuz.at</a> ein:
             </div>
             <div className="inline-flex rounded-xl overflow-hidden">
-              <input className="p-2 px-4 outline-none" onKeyDown={(event) => {
+              <input
+                className="p-2 px-4 outline-none"
+                onInput={(event) => setSessionId(event.target["value"])}
+                onKeyDown={(event) => {
                 if (event.key === 'Enter') {
-                  confirm(event);
+                  confirm();
                 }
               }}/>
-              <div className="bg-secondary p-2 text-white cursor-pointer" onClick={confirm}>Weiter</div>
+              <div className="bg-secondary p-2 px-4 text-white cursor-pointer" onClick={confirm}>Weiter</div>
             </div>
           </div>
         </Site>
